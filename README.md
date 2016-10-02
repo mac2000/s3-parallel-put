@@ -2,13 +2,31 @@
 
 Upload folder files in parallel
 
-Usage example:
+**Usage example:**
 
 ```
 s3-parallel-put.exe -t 10 -f "C:\Users\AlexandrM\Desktop\test" -k "********************" -s "****************************************" -z "eu-central-1" -b "rua-cv-photos" -a "public-read" -p "*.jpg" -r
 ```
 
-Available options:
+While uploading will print progress like this:
+
+```
+Processed: 5 852 Queued: 1 608 871 Elapsed: 00:01:00.7784604
+```
+
+Memory usage in case of 1.6 mln of files is around 300mb and goind down while processing.
+
+**How it workds:**
+
+There are following parallel thread running:
+
+`CollectFilesToQueue` - will traverse given folder and collect found files into queue
+
+`ProcessQueue * N` - will run `N` instancess of this process to deal with queue
+
+`PrintProgress` - displays current progress
+
+**Available options:**
 
 ```
   -t, --threads      (Default: 10) Number of threads to run
