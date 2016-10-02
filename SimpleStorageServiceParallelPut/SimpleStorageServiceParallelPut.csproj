@@ -74,11 +74,32 @@
     <Analyzer Include="..\packages\AWSSDK.S3.3.3.0.1\analyzers\dotnet\cs\AWSSDK.S3.CodeAnalysis.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
+  <Target Name="AfterBuild" Condition="'$(Configuration)' == 'Release'">
+    <ConvertToAbsolutePath Paths="$(OutputPath)">
+      <Output TaskParameter="AbsolutePaths" PropertyName="OutputFullPath" />
+    </ConvertToAbsolutePath>
+    <ItemGroup>
+      <MergeAssemblies Include="$(OutputPath)s3-parallel-put.exe" />
+      <MergeAssemblies Include="$(OutputPath)AWSSDK.Core.dll" />
+      <MergeAssemblies Include="$(OutputPath)AWSSDK.S3.dll" />
+      <MergeAssemblies Include="$(OutputPath)CommandLine.dll" />
+      <MergeAssemblies Include="$(OutputPath)FSharp.Core.dll" />
+    </ItemGroup>
+    <PropertyGroup>
+      <OutputAssembly>$(OutputFullPath)s3-parallel-put.standalone.exe</OutputAssembly>
+      <Merger>$(SolutionDir)packages\ILMerge.2.14.1208\tools\ILMerge.exe</Merger>
+    </PropertyGroup>
+    <Message Text="Merge -&gt; $(OutputAssembly)" Importance="High" />
+    <Exec Command="&quot;$(Merger)&quot; /target:exe /out:&quot;$(OutputAssembly)&quot; @(MergeAssemblies->'&quot;%(FullPath)&quot;', ' ')" />
+    <ItemGroup>
+      <FilesToDelete Include="$(OutputPath)s3-parallel-put.exe" />
+      <FilesToDelete Include="$(OutputPath)*.pdb" />
+      <FilesToDelete Include="$(OutputPath)*.xml" />
+      <FilesToDelete Include="$(OutputPath)*.dll" />
+    </ItemGroup>
+    <Message Text="Cleanup -&gt; @(FilesToDelete, ', ')" Importance="High" />
+    <Delete Files="@(FilesToDelete)" />
+    <Copy SourceFiles="$(OutputAssembly)" DestinationFiles="$(OutputPath)s3-parallel-put.exe" />
+    <Delete Files="$(OutputAssembly)" />
   </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>
