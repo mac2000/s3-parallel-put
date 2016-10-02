@@ -48,3 +48,7 @@ There are following parallel thread running:
 
   -r, --recursive    (Default: false) Recursively iterate
 ```
+
+Python based analog that will run on any system: https://github.com/mishudark/s3-parallel-put
+
+Reason to build this one is because I do not able to install python to production server where files live
