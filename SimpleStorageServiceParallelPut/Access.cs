@@ -1,4 +1,5 @@
-﻿using Amazon.S3;
+﻿using System;
+using Amazon.S3;
 
 namespace SimpleStorageServiceParallelPut
 {
@@ -8,7 +9,9 @@ namespace SimpleStorageServiceParallelPut
 
         public Access(string access)
         {
-            S3CannedAcl = S3CannedACL.FindValue(access);
+            S3CannedAcl = string.IsNullOrEmpty(access)
+                ? S3CannedACL.PublicRead
+                : S3CannedACL.FindValue(access);
         }
     }
 }

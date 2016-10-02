@@ -24,7 +24,7 @@ namespace SimpleStorageServiceParallelPut
         [Option('b', "bucket", Required = true, HelpText = "Bucket name to upload files into")]
         public string BucketName { get; set; }
 
-        [Option('a', "access", Default = "public-read", HelpText = "S3 canned ACL e.g. NoACL, private, public-read")]
+        [Option('a', "access", Default = "public-read", Required = true, HelpText = "S3 canned ACL e.g. NoACL, private, public-read")]
         public Access Access { get; set; }
 
         [Option('p', "pattern", Default = "*.*", HelpText = "Search pattern, e.g. *.jpg")]
