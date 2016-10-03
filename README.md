@@ -5,26 +5,15 @@ Upload folder files in parallel
 **Usage example:**
 
 ```
-s3-parallel-put.exe -t 10 -f "C:\Users\AlexandrM\Desktop\test" -k "********************" -s "****************************************" -z "eu-central-1" -b "rua-cv-photos" -a "public-read" -p "*.jpg" -r
+s3-parallel-put.exe -t 10 -f "C:\Users\AlexandrM\Desktop\test" -k "********************" -s "****************************************" -z "eu-central-1" -b "rua-cv-photos" -a "public-read" -p "*.jpg" -r -o
 ```
 
 While uploading will print progress like this:
 
 ```
-Processed: 5 852 Queued: 1 608 871 Elapsed: 00:01:00.7784604
+Processed: 5 852 Elapsed: 00:01:00.7784604
 ```
 
-Memory usage in case of 1.6 mln of files is around 300mb and goind down while processing.
-
-**How it workds:**
-
-There are following parallel thread running:
-
-`CollectFilesToQueue` - will traverse given folder and collect found files into queue
-
-`ProcessQueue * N` - will run `N` instancess of this process to deal with queue
-
-`PrintProgress` - displays current progress
 
 **Available options:**
 
@@ -41,12 +30,14 @@ There are following parallel thread running:
 
   -b, --bucket       Required. Bucket name to upload files into
 
-  -a, --access       (Default: public-read) S3 canned ACL e.g. NoACL, private,
-                     public-read
+  -a, --access       Required. (Default: public-read) S3 canned ACL e.g. NoACL,
+                     private, public-read
 
   -p, --pattern      (Default: *.*) Search pattern, e.g. *.jpg
 
   -r, --recursive    (Default: false) Recursively iterate
+
+  -o, --Overwrite    (Default: false) Overwrite existing files
 ```
 
 Python based analog that will run on any system: https://github.com/mishudark/s3-parallel-put

@@ -1,4 +1,8 @@
-﻿using Amazon.Runtime;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
+using Amazon.Runtime;
 using Amazon.S3;
 using CommandLine;
 
@@ -33,6 +37,12 @@ namespace SimpleStorageServiceParallelPut
         [Option('r', "recursive", Default = false, HelpText = "Recursively iterate")]
         public bool Recursive { get; set; }
 
+        [Option('o', "Overwrite", Default = false, HelpText = "Overwrite existing files")]
+        public bool Overwrite { get; set; }
+
+        public IEnumerable<string> Files => Directory.EnumerateFiles(Folder.ToString(), Pattern, Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+
+        public ParallelOptions ParallelOptions => new ParallelOptions { MaxDegreeOfParallelism = Threads };
 
         public AWSCredentials AwsCredentials => new BasicAWSCredentials(AwsAccessKey, AwsSecretKey);
 

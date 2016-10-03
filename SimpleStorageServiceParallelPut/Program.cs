@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.S3;
 using Amazon.S3.Model;
 using CommandLine;
 
@@ -12,79 +11,72 @@ namespace SimpleStorageServiceParallelPut
 {
     public class Program
     {
-        private static readonly ConcurrentQueue<string> Queue = new ConcurrentQueue<string>();
+        private const string Format = "Elapsed: {0} Processed: {1:N0}";
         private static readonly Stopwatch Timer = Stopwatch.StartNew();
         private static long _total;
+        private static bool _done;
 
         public static void Main(string[] args)
         {
             Parser.Default.ParseArguments<Options>(args).WithParsed(Run);
         }
 
-        public static void ProcessItem(Options options, string file)
-        {
-            using (var client = options.AmazonS3Client)
-            {
-                client.PutObject(new PutObjectRequest
-                {
-                    BucketName = options.BucketName,
-                    Key = Path.GetFileName(file),
-                    FilePath = file,
-                    CannedACL = options.Access.S3CannedAcl
-                });
-            }
-        }
-
         private static void Run(Options options)
         {
-            var tasks = new List<Task>
+            Task.Run(() =>
             {
-                Task.Run(() => CollectFilesToQueue(options))
-            };
+                while (!_done)
+                {
+                    Console.Write($"{Format}\r", Timer.Elapsed, _total);
+                    Thread.Sleep(100);
+                }
+            });
 
-            var waitCounter = 0;
-            while (Queue.Count == 0 && waitCounter++ < 10)
-            {
-                Thread.Sleep(100);
-            }
+            Parallel.ForEach(options.Files, options.ParallelOptions,
+                file =>
+                {
+                    using (var client = options.AmazonS3Client)
+                    {
+                        if (options.Overwrite || !Exists(client, options.BucketName, file))
+                        {
+                            client.PutObject(new PutObjectRequest
+                            {
+                                BucketName = options.BucketName,
+                                Key = Path.GetFileName(file),
+                                FilePath = file,
+                                CannedACL = options.Access.S3CannedAcl
+                            });
+                        }
+                    }
 
-            tasks.Add(Task.Run(() => PrintProgress()));
+                    Interlocked.Increment(ref _total);
+                });
 
-            for (var i = 0; i < options.Threads; i++)
-            {
-                tasks.Add(Task.Run(() => ProcessQueue(options)));
-            }
-
-            Task.WaitAll(tasks.ToArray());
+            _done = true;
             Timer.Stop();
-            Console.Clear();
-            Console.WriteLine($"Processed {_total:N0} files in {Timer.Elapsed}");
+            Console.WriteLine(Format, Timer.Elapsed, _total);
         }
 
-        private static void PrintProgress()
+        private static bool Exists(IAmazonS3 client, string bucketName, string file)
         {
-            while (!Queue.IsEmpty)
+            try
             {
-                Console.Write($"Processed: {_total:N0} Queued: {Queue.Count:N0} Elapsed: {Timer.Elapsed}\r");
-                Thread.Sleep(100);
+                client.GetObjectMetadata(new GetObjectMetadataRequest
+                {
+                    BucketName = bucketName,
+                    Key = Path.GetFileName(file)
+                });
+
+                return true;
             }
-        }
-
-        private static void ProcessQueue(Options options)
-        {
-            string file;
-            while (Queue.TryDequeue(out file))
+            catch (AmazonS3Exception ex)
             {
-                ProcessItem(options, file);
-                Interlocked.Increment(ref _total);
-            }
-        }
+                if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return false;
+                }
 
-        private static void CollectFilesToQueue(Options options)
-        {
-            foreach (var file in Directory.EnumerateFiles(options.Folder.ToString(), options.Pattern, SearchOption.TopDirectoryOnly))
-            {
-                Queue.Enqueue(file);
+                throw;
             }
         }
     }
