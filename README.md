@@ -37,7 +37,11 @@ Processed: 5 852 Elapsed: 00:01:00.7784604
 
   -r, --recursive    (Default: false) Recursively iterate
 
-  -o, --Overwrite    (Default: false) Overwrite existing files
+  -o, --overwrite    (Default: false) Overwrite existing files
+
+  -c, --created      Only process files created since e.g. 2016-01-01 00:00:00
+
+  -d, --dry          Dry run
 ```
 
 Python based analog that will run on any system: https://github.com/mishudark/s3-parallel-put
