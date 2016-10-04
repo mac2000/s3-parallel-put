@@ -23,29 +23,42 @@ namespace SimpleStorageServiceParallelPut
 
         private static void Run(Options options)
         {
-            Task.Run(() =>
+            if (!options.DryRun)
             {
-                while (!_done)
+                Task.Run(() =>
                 {
-                    Console.Write($"{Format}\r", Timer.Elapsed, _total);
-                    Thread.Sleep(100);
-                }
-            });
+                    while (!_done)
+                    {
+                        Console.Write($"{Format}\r", Timer.Elapsed, _total);
+                        Thread.Sleep(100);
+                    }
+                });
+            }
 
             Parallel.ForEach(options.Files, options.ParallelOptions,
                 file =>
                 {
-                    using (var client = options.AmazonS3Client)
+                    if (!options.Created.HasValue || File.GetCreationTime(file) > options.Created.Value)
                     {
-                        if (options.Overwrite || !Exists(client, options.BucketName, file))
+                        if (!options.DryRun)
                         {
-                            client.PutObject(new PutObjectRequest
+                            using (var client = options.AmazonS3Client)
                             {
-                                BucketName = options.BucketName,
-                                Key = Path.GetFileName(file),
-                                FilePath = file,
-                                CannedACL = options.Access.S3CannedAcl
-                            });
+                                if (options.Overwrite || !Exists(client, options.BucketName, file))
+                                {
+                                    client.PutObject(new PutObjectRequest
+                                    {
+                                        BucketName = options.BucketName,
+                                        Key = Path.GetFileName(file),
+                                        FilePath = file,
+                                        CannedACL = options.Access.S3CannedAcl
+                                    });
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"{File.GetCreationTime(file)} {Path.GetFileName(file)}");
                         }
                     }
 

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -37,8 +38,14 @@ namespace SimpleStorageServiceParallelPut
         [Option('r', "recursive", Default = false, HelpText = "Recursively iterate")]
         public bool Recursive { get; set; }
 
-        [Option('o', "Overwrite", Default = false, HelpText = "Overwrite existing files")]
+        [Option('o', "overwrite", Default = false, HelpText = "Overwrite existing files")]
         public bool Overwrite { get; set; }
+
+        [Option('c', "created", HelpText = "Only process files created since e.g. 2016-01-01 00:00:00")]
+        public DateTime? Created { get; set; }
+
+        [Option('d', "dry", HelpText = "Dry run")]
+        public bool DryRun { get; set; }
 
         public IEnumerable<string> Files => Directory.EnumerateFiles(Folder.ToString(), Pattern, Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
 
