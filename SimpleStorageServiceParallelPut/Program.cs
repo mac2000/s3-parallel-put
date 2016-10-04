@@ -11,9 +11,10 @@ namespace SimpleStorageServiceParallelPut
 {
     public class Program
     {
-        private const string Format = "Elapsed: {0} Processed: {1:N0}";
+        private const string Format = "Elapsed: {0} Processed: {1:N0} Uploaded: {2:N0}";
         private static readonly Stopwatch Timer = Stopwatch.StartNew();
-        private static long _total;
+        private static long _processed;
+        private static long _uploaded;
         private static bool _done;
 
         public static void Main(string[] args)
@@ -29,7 +30,7 @@ namespace SimpleStorageServiceParallelPut
                 {
                     while (!_done)
                     {
-                        Console.Write($"{Format}\r", Timer.Elapsed, _total);
+                        Console.Write($"{Format}\r", Timer.Elapsed, _processed, _uploaded);
                         Thread.Sleep(100);
                     }
                 });
@@ -53,6 +54,7 @@ namespace SimpleStorageServiceParallelPut
                                         FilePath = file,
                                         CannedACL = options.Access.S3CannedAcl
                                     });
+                                    Interlocked.Increment(ref _uploaded);
                                 }
                             }
                         }
@@ -62,12 +64,12 @@ namespace SimpleStorageServiceParallelPut
                         }
                     }
 
-                    Interlocked.Increment(ref _total);
+                    Interlocked.Increment(ref _processed);
                 });
 
             _done = true;
             Timer.Stop();
-            Console.WriteLine(Format, Timer.Elapsed, _total);
+            Console.WriteLine(Format, Timer.Elapsed, _processed, _uploaded);
         }
 
         private static bool Exists(IAmazonS3 client, string bucketName, string file)
