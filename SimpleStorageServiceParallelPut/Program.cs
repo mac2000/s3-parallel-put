@@ -52,7 +52,7 @@ namespace SimpleStorageServiceParallelPut
                                         BucketName = options.BucketName,
                                         Key = Path.GetFileName(file),
                                         FilePath = file,
-                                        CannedACL = options.Access.S3CannedAcl
+                                        CannedACL = options.Access?.S3CannedAcl ?? S3CannedACL.PublicRead
                                     });
                                     Interlocked.Increment(ref _uploaded);
                                 }

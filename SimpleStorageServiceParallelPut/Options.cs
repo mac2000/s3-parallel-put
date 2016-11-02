@@ -47,7 +47,7 @@ namespace SimpleStorageServiceParallelPut
         [Option('d', "dry", HelpText = "Dry run")]
         public bool DryRun { get; set; }
 
-        public IEnumerable<string> Files => Directory.EnumerateFiles(Folder.ToString(), Pattern, Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+        public IEnumerable<string> Files => Directory.EnumerateFiles(Folder.ToString(), Pattern ?? "*.*", Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
 
         public ParallelOptions ParallelOptions => new ParallelOptions { MaxDegreeOfParallelism = Threads };
 
